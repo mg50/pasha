@@ -6,8 +6,7 @@ import Text.ParserCombinators.Parsec
 
 
 parseFunctionDef :: Parser Function
-parseFunctionDef = do string "def"
-                      spaces
+parseFunctionDef = do string "def "
                       name <- many1 letter
                       char '('
                       paramNames <- parseParamNames
@@ -16,8 +15,7 @@ parseFunctionDef = do string "def"
                       body <- many1 $ parseStatement
                       return $ Function name paramNames body
 
-parseParamNames = parseArgs parseIdent
-parseIdent = many1 letter
+parseParamNames = parseArgs $ many1 letter
 
 parseStatement :: Parser Expression
 parseStatement = do string "  "
@@ -37,13 +35,14 @@ parseFunctionOrAssignmentOrVariable = do
     Nothing -> parseAssignmentOrVariable name
 
 parseAssignmentOrVariable :: String -> Parser Expression
-parseAssignmentOrVariable varname = try assign <|> return (Variable varname)
-  where assign = do spaces
-                    char '='
-                    spaces
-                    expr <- parseExpression
-                    return $ Assignment varname expr
-
+parseAssignmentOrVariable varname = do
+  many $ char ' '
+  maybeEquals <- optionMaybe $ char '='
+  case maybeEquals of
+    Just _  -> do spaces
+                  expr <- parseExpression
+                  return $ Assignment varname expr
+    Nothing -> return $ Variable varname
 
 parseArgs :: Parser a -> Parser [a]
 parseArgs parser = do spaces
