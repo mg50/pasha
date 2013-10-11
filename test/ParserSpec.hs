@@ -38,24 +38,24 @@ spec = do
                      Left  err -> error $ "function def parsing error: " ++ show err
                      Right val -> val
     it "parses a function with no params" $ do
-      p "def hello() { 'asdf'; }" `shouldBe` Function "hello" [] [StringLit "asdf"]
+      p "def hello():\n  'asdf'" `shouldBe` Function "hello" [] [StringLit "asdf"]
 
     it "parses a function with no params and two statements" $ do
-      p "def hello() { 'asdf'; xyz; }" `shouldBe` Function "hello" [] [ StringLit "asdf"
+      p "def hello():\n  'asdf'\n  xyz" `shouldBe` Function "hello" [] [ StringLit "asdf"
                                                                       , Variable "xyz" ]
 
     it "parses a function with one param" $ do
-      p "def hello(a) { a; }" `shouldBe` Function "hello" ["a"] [Variable "a"]
+      p "def hello(a):\n  a" `shouldBe` Function "hello" ["a"] [Variable "a"]
 
     it "parses a function with two params" $ do
-      p "def hello(a, b) { a; b; }" `shouldBe` Function "hello" ["a", "b"] [ Variable "a"
+      p "def hello(a, b):\n  a\n  b" `shouldBe` Function "hello" ["a", "b"] [ Variable "a"
                                                                            , Variable "b" ]
 
     it "handles weird spaces in parameters" $ do
-      p "def hello( a, b,c) { a; }" `shouldBe` Function "hello" ["a", "b", "c"]
+      p "def hello( a, b,c):\n  a" `shouldBe` Function "hello" ["a", "b", "c"]
         [ Variable "a"]
 
     it "handles assignment statements" $ do
-      p "def hello(a) { a = g('asdf'); b; }" `shouldBe` Function "hello" ["a"]
+      p "def hello(a):\n  a = g('asdf')\n  b" `shouldBe` Function "hello" ["a"]
         [ Assignment "a" (FunctionCall "g" [StringLit "asdf"])
         , Variable "b" ]

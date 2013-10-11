@@ -1,6 +1,9 @@
 module Parser where
 import Types
+import Control.Monad
 import Text.ParserCombinators.Parsec
+
+
 
 parseFunctionDef :: Parser Function
 parseFunctionDef = do string "def"
@@ -8,10 +11,8 @@ parseFunctionDef = do string "def"
                       name <- many1 letter
                       char '('
                       paramNames <- parseParamNames
-                      char ')'
-                      spaces
-                      char '{'
-                      spaces
+                      string "):"
+                      newline
                       body <- many1 $ parseStatement
                       return $ Function name paramNames body
 
@@ -19,10 +20,9 @@ parseParamNames = parseArgs parseIdent
 parseIdent = many1 letter
 
 parseStatement :: Parser Expression
-parseStatement = do expr <- parseExpression
-                    spaces
-                    char ';'
-                    spaces
+parseStatement = do string "  "
+                    expr <- parseExpression
+                    void newline <|> eof
                     return expr
 
 parseExpression = parseStringLit <|> parseFunctionOrAssignmentOrVariable
