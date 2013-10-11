@@ -1,9 +1,15 @@
 module Parser where
 import Types
 import Control.Monad
+import Data.Char (isSpace)
 import Text.ParserCombinators.Parsec
 
-
+parseProgram :: Parser Program
+parseProgram = do blankLines
+                  defs <- parseFunctionDef `separatedBy` blankLines
+                  return $ Program defs
+  where blankLines = many $ many blank >> (void newline <|> eof)
+        blank = satisfy $ \c -> isSpace c && c /= '\n'
 
 parseFunctionDef :: Parser Function
 parseFunctionDef = do string "def "
