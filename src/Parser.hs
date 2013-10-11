@@ -57,10 +57,6 @@ separatedBy parser sep = do spaces
                          Just _  -> separatedBy parser sep
                          Nothing -> return []
 
-parseVariable :: Parser Expression
-parseVariable = do name <- many letter
-                   return $ Variable name
-
 parseStringLit :: Parser Expression
 parseStringLit = do char '\''
                     lit <- many $ noneOf "'"
