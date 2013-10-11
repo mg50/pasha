@@ -15,7 +15,7 @@ parseFunctionDef = do string "def "
                       body <- many1 $ parseStatement
                       return $ Function name paramNames body
 
-parseParamNames = parseArgs $ many1 letter
+parseParamNames = many1 letter `separatedBy` char ','
 
 parseStatement :: Parser Expression
 parseStatement = do string "  "
@@ -29,7 +29,7 @@ parseFunctionOrAssignmentOrVariable = do
   name <- many1 letter
   maybeParen <- optionMaybe $ char '('
   case maybeParen of
-    Just _  -> do args <- parseArgs parseExpression
+    Just _  -> do args <- parseExpression `separatedBy` char ','
                   char ')'
                   return $ FunctionCall name args
     Nothing -> parseAssignmentOrVariable name
@@ -44,21 +44,18 @@ parseAssignmentOrVariable varname = do
                   return $ Assignment varname expr
     Nothing -> return $ Variable varname
 
-parseArgs :: Parser a -> Parser [a]
-parseArgs parser = do spaces
-                      arg <- optionMaybe parser
-                      allArgs <- case arg of
-                                   Just a -> do rest <- parseRestArgs parser
-                                                return $ a:rest
-                                   Nothing -> return []
-                      spaces
-                      return allArgs
-
-parseRestArgs :: Parser a -> Parser [a]
-parseRestArgs parser =  do maybeComma <- optionMaybe $ char ','
-                           case maybeComma of
-                             Just _  -> parseArgs parser
-                             Nothing -> return []
+separatedBy :: Parser a -> Parser b -> Parser [a]
+separatedBy parser sep = do spaces
+                            arg <- optionMaybe parser
+                            allArgs <- case arg of
+                                         Just a -> do rest <- parseRest
+                                                      return $ a:rest
+                                         Nothing -> return []
+                            return allArgs
+  where parseRest = do maybeSeparator <- optionMaybe sep
+                       case maybeSeparator of
+                         Just _  -> separatedBy parser sep
+                         Nothing -> return []
 
 parseVariable :: Parser Expression
 parseVariable = do name <- many letter
