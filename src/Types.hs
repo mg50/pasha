@@ -1,7 +1,9 @@
 {-# LANGUAGE GADTs #-}
 module Types where
+import Control.Monad.Trans.State
+import Control.Monad.Trans.Error
 
-data Program = Program [Function]
+type Program = [Function]
 
 data Expression = Variable String
                 | StringLit String
@@ -11,3 +13,5 @@ data Expression = Variable String
 data Function = Function { funcName :: String
                          , funcParams :: [String]
                          , body :: [Expression] } deriving (Eq, Show)
+
+type Pasha = ErrorT String (StateT Program IO)
