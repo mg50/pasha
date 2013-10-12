@@ -47,3 +47,11 @@ spec = do
                    , Assignment "c" (Variable "a")
                    , Assignment "d" (Variable "e")]
       undeclaredVars expr `shouldBe` ["q", "e"]
+
+  describe "undeclaredFunctions" $ do
+    it "finds undeclared function names" $ do
+      let known = ["f", "g"]
+          f = Function "f" [] [ FunctionCall "f" [StringLit "a"]
+                              , FunctionCall "h" [StringLit "b"]
+                              , FunctionCall "i" [FunctionCall "j" [StringLit "c"]] ]
+      undeclaredFunctions known f `shouldBe` ["h", "i", "j"]

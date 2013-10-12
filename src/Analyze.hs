@@ -3,17 +3,14 @@ import Data.List ((\\))
 import qualified Data.List as L
 import Types
 
--- allCalledFunctionNames :: Program -> [String]
--- allCalledFunctionNames (Program []) = []
--- allCalledFunctionNames (Program fs) = concatMap go fs
---   where go (Function _ params body) = concatMap (names params) body
---         names _ (Assignment _ expr) = names expr
---         names shadowed (FunctionCall f args) = f : [name | expr <- args
---                                                          , name <- names shadowed expr
---                                                          , not (name `elem` shadowed)]
---         names _ _ = []
+undeclaredFunctions :: [String] -> Function -> [String]
+undeclaredFunctions knownFunctionNames (Function _ _ body) =
+  (concatMap functionsInExpr body) \\ knownFunctionNames
 
-
+functionsInExpr :: Expression -> [String]
+functionsInExpr (Assignment _ body) = functionsInExpr body
+functionsInExpr (FunctionCall f body) = f : concatMap functionsInExpr body
+functionsInExpr _ = []
 
 undeclaredVars :: Function -> [String]
 undeclaredVars (Function _ params body) = go params body
