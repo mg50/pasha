@@ -28,21 +28,14 @@ parseVarSection = do string "#{"
                      return $ VarSection name
 
 parseStringSection :: Parser InterpolationSection
-parseStringSection = liftM StringSection (parseStringSection' True)
-
-parseStringSection' :: Bool -> Parser String
-parseStringSection' b = do
-  let comb = if b then many1 else many
-  str <- comb $ noneOf "#\\"
-  maybeEscaped <- optionMaybe escapedParser
-  case maybeEscaped of
-    Just esc -> do rest <- parseStringSection' False
-                   return $ str ++ esc ++ rest
-    Nothing  -> return str
-
-escapedParser :: Parser String
-escapedParser = do c <- char '\\'
-                   maybeC' <- optionMaybe anyChar
-                   return $ case maybeC' of
-                              Just c' -> [c, c']
-                              Nothing -> [c]
+parseStringSection = liftM StringSection parseStringSection'
+  where parseStringSection' = do
+          c <- noneOf "#"
+          result <- if c == '\\'
+                       then do mc' <- optionMaybe anyChar
+                               return $ case mc' of
+                                          Just c' -> [c, c']
+                                          Nothing -> [c]
+                       else return [c]
+          rest <- many parseStringSection'
+          return $ (result ++ concat rest)

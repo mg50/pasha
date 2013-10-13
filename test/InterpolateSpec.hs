@@ -18,6 +18,7 @@ spec = do
                     , ("#{asdf}hello", [vs "asdf", ss "hello"])
                     , ("hello#{asdf}world", [ss "hello", vs "asdf", ss "world"])
                     , ("hello\\#{asdf}", [ss "hello\\#{asdf}"])
+                    , ("\\hello\\#{asdf}", [ss "\\hello\\#{asdf}"])
                   ]
     forM_ testCases $ \(str, expected) -> do
       it ("parses `" ++ str ++ "`") $ p str `shouldBe` expected
