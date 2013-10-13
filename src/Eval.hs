@@ -29,18 +29,18 @@ eval (FunctionCall fname args) = do
   when (length paramNames /= length evalArgs) $
     error $ "incorrect number of parameters supplied for " ++ fname
 
-  withBindings (zip paramNames evalArgs) $ do
+  withState (zip paramNames evalArgs) $ do
     results <- mapM eval body
     case results of
       [] -> error $ "empty function body in function " ++ fname
       _  -> return (last results)
 
-withBindings :: Bindings -> Pasha a -> Pasha a
-withBindings bindings action = do
-  env <- get
-  put bindings
+withState :: (MonadState s m) => s -> m a -> m a
+withState tempState action = do
+  state <- get
+  put tempState
   result <- action
-  put env
+  put state
   return result
 
 lookupFn :: String -> Program -> Function
