@@ -32,10 +32,14 @@ parseStringSection = liftM StringSection parseStringSection'
   where parseStringSection' = do
           c <- noneOf "#"
           result <- if c == '\\'
-                       then do mc' <- optionMaybe anyChar
-                               return $ case mc' of
-                                          Just c' -> [c, c']
-                                          Nothing -> [c]
+                       then do escaped <- escapedChar
+                               return (c:escaped)
                        else return [c]
           rest <- many parseStringSection'
           return $ (result ++ concat rest)
+
+escapedChar :: Parser String
+escapedChar = do mc <- optionMaybe anyChar
+                 return $ case mc of
+                            Just c  -> [c]
+                            Nothing -> []
