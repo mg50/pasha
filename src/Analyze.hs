@@ -3,6 +3,27 @@ import Data.List ((\\))
 import qualified Data.List as L
 import Types
 
+data ProgramError = UndeclaredFunction String String
+                  | UndeclaredVariable String String
+                  | NoMain deriving (Show)
+
+analyze :: Program -> Either ProgramError Program
+analyze program
+  | hasNoMain           = Left NoMain
+  | notNull undeclFuncs = Left $ uncurry UndeclaredFunction (head undeclFuncs)
+  | notNull undeclVars  = Left $ uncurry UndeclaredVariable (head undeclVars)
+  | otherwise           = Right program
+  where funcNames = map funcName program
+        hasNoMain = "main" `notElem` funcNames
+
+        undeclFuncs = do f <- program
+                         name <- undeclaredFunctions funcNames f
+                         return (funcName f, name)
+        undeclVars  = do f <- program
+                         v <- undeclaredVars f
+                         return (funcName f, v)
+
+
 undeclaredFunctions :: [String] -> Function -> [String]
 undeclaredFunctions knownFunctionNames (Function _ _ body) =
   (concatMap functionsInExpr body) \\ knownFunctionNames
@@ -31,3 +52,6 @@ varsInExpr (FunctionCall _ es) = foldr join ([], []) $ map varsInExpr es
 
 without :: (Eq a) => [a] -> a -> [a]
 without xs y = [x | x <- xs, x /= y]
+
+notNull :: [a] -> Bool
+notNull = not . null

@@ -4,6 +4,9 @@ import Control.Monad
 import Data.Char (isSpace)
 import Text.ParserCombinators.Parsec
 
+parsePasha :: String -> Either ParseError Program
+parsePasha program = parse parseProgram "" program
+
 parseProgram :: Parser Program
 parseProgram = do blankLines
                   defs <- parseFunctionDef `separatedBy` blankLines
@@ -53,11 +56,10 @@ parseAssignmentOrVariable varname = do
 separatedBy :: Parser a -> Parser b -> Parser [a]
 separatedBy parser sep = do spaces
                             arg <- optionMaybe parser
-                            allArgs <- case arg of
-                                         Just a -> do rest <- parseRest
-                                                      return $ a:rest
-                                         Nothing -> return []
-                            return allArgs
+                            case arg of
+                              Just a -> do rest <- parseRest
+                                           return $ a:rest
+                              Nothing -> return []
   where parseRest = do maybeSeparator <- optionMaybe sep
                        case maybeSeparator of
                          Just _  -> separatedBy parser sep
