@@ -38,8 +38,7 @@ eval (FunctionCall fname args) = do
 withBindings :: Bindings -> Pasha a -> Pasha a
 withBindings bindings action = do
   env <- get
-  let env' = env{bindings = bindings}
-  put env'
+  put env{bindings = bindings}
   result <- action
   put env
   return result
@@ -49,5 +48,5 @@ lookupFn fname [] = error $ "could not find function " ++ fname
 lookupFn fname (f:fs) | fname == funcName f = f
                       | otherwise = lookupFn fname fs
 
-getFns  = liftM fns get
+getFns      = liftM fns get
 getBindings = liftM bindings get
