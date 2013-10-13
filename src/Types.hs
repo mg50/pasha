@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 module Types where
 import Control.Monad.Trans.State
-import Control.Monad.Trans.Error
+import Control.Monad.Trans.Reader
 
 type Program = [Function]
 
@@ -18,4 +18,4 @@ type Bindings = [(String, String)]
 data Env = Env { fns :: Program
                , bindings :: Bindings }
 
-type Pasha = StateT Env IO
+type Pasha = StateT Bindings (ReaderT Program IO)
