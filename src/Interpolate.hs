@@ -39,7 +39,5 @@ parseStringSection = liftM StringSection parseStringSection'
           return $ (result ++ concat rest)
 
 escapedChar :: Parser String
-escapedChar = do mc <- optionMaybe anyChar
-                 return $ case mc of
-                            Just c  -> [c]
-                            Nothing -> []
+escapedChar = do c <- optionMaybe anyChar
+                 return $ maybe [] (:[]) c
