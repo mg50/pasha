@@ -6,7 +6,7 @@ import Control.Monad.Trans.Error
 type Program = [Function]
 
 data Expression = Variable String
-                | StringLit String
+                | StringLit { fromStringLit :: String }
                 | Assignment String Expression
                 | FunctionCall String [Expression] deriving (Eq, Show)
 
@@ -14,4 +14,8 @@ data Function = Function { funcName :: String
                          , funcParams :: [String]
                          , body :: [Expression] } deriving (Eq, Show)
 
-type Pasha = ErrorT String (StateT Program IO)
+type Bindings = [(String, String)]
+data Env = Env { fns :: Program
+               , bindings :: Bindings }
+
+type Pasha = StateT Env IO

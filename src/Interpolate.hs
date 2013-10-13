@@ -2,7 +2,8 @@ module Interpolate where
 import Text.ParserCombinators.Parsec
 import Control.Monad
 
-data InterpolationSection = StringSection String | VarSection String deriving (Show, Eq)
+data InterpolationSection = StringSection String
+                          | VarSection String deriving (Show, Eq)
 
 interpolate :: [(String, String)] -> String -> String
 interpolate pairs s =
