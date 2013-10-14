@@ -1,21 +1,22 @@
 module Interpolate where
 import Text.ParserCombinators.Parsec
 import Control.Monad
+import qualified Data.Map as M
 
 data InterpolationSection = StringSection String
                           | VarSection String deriving (Show, Eq)
 
-interpolate :: [(String, String)] -> String -> String
+interpolate :: M.Map String String -> String -> String
 interpolate pairs s =
   case parse parseInterpolant "" s of
     Left err       -> error $ "could not parse for interpolation: " ++ show err
     Right sections -> concatMap (substitute pairs) sections
 
 
-substitute :: [(String, String)] -> InterpolationSection -> String
+substitute :: M.Map String String -> InterpolationSection -> String
 substitute _ (StringSection s) = s
 substitute pairs (VarSection s) =
-  case lookup s pairs of
+  case M.lookup s pairs of
     Just v  -> v
     Nothing -> error $ "could not find variable " ++ s ++ " to interpolate"
 

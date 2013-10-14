@@ -15,7 +15,7 @@ eval (Variable varname) = do
 
 eval (StringLit s) = do
   bindings <- get
-  let s' = interpolate (M.toList bindings) s
+  let s' = interpolate bindings s
   undefined
 
 eval (Assignment v expr) = do

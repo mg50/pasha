@@ -1,11 +1,14 @@
 module Analyze where
-import Data.List ((\\))
-import qualified Data.List as L
+import qualified Data.Set as S
+import Data.Set ((\\))
+import Data.List (foldl')
 import Types
 
 data ProgramError = UndeclaredFunction String String
                   | UndeclaredVariable String String
                   | NoMain deriving (Show)
+
+type Strings = S.Set String
 
 analyze :: Program -> Either ProgramError Program
 analyze program
@@ -17,41 +20,47 @@ analyze program
         hasNoMain = "main" `notElem` funcNames
 
         undeclFuncs = do f <- program
-                         name <- undeclaredFunctions funcNames f
+                         name <- S.toList $ undeclaredFunctions (S.fromList funcNames) f
                          return (funcName f, name)
         undeclVars  = do f <- program
-                         v <- undeclaredVars f
+                         v <- S.toList $ undeclaredVars f
                          return (funcName f, v)
 
 
-undeclaredFunctions :: [String] -> Function -> [String]
+undeclaredFunctions :: Strings -> Function -> Strings
 undeclaredFunctions knownFunctionNames (Function _ _ body) =
-  (concatMap functionsInExpr body) \\ knownFunctionNames
+  S.unions (map functionsInExpr body) \\ knownFunctionNames
 
-functionsInExpr :: Expression -> [String]
+functionsInExpr :: Expression -> Strings
 functionsInExpr (Assignment _ body) = functionsInExpr body
-functionsInExpr (FunctionCall f body) = f : concatMap functionsInExpr body
-functionsInExpr _ = []
+functionsInExpr (FunctionCall f args) = S.insert f fs
+  where fs = S.unions $ map functionsInExpr args
+functionsInExpr _ = S.empty
 
-undeclaredVars :: Function -> [String]
-undeclaredVars (Function _ params body) = go params body
-  where go declared [] = []
-        go declared (e:es) = let (decl, undecl) = varsInExpr e
-                                 diff = undecl \\ declared
-                                 declared' = L.nub $ declared ++ decl
-                             in diff ++ go declared' es
 
-varsInExpr :: Expression -> ([String], [String])
-varsInExpr (Variable v) = ([], [v])
-varsInExpr StringLit{} = ([], [])
+
+undeclaredVars :: Function -> Strings
+undeclaredVars (Function _ params body) = snd $ juxtAll go
+  where go = (S.fromList params, S.empty) : map varsInExpr body
+
+varsInExpr :: Expression -> (Strings, Strings)
+varsInExpr (Variable v) = (S.empty, S.fromList [v])
+varsInExpr StringLit{} = (S.empty, S.empty)
 varsInExpr (Assignment v e) = let (decl, undecl) = varsInExpr e
-                              in (L.nub (v:decl), undecl `without` v)
-varsInExpr (FunctionCall _ es) = foldr join ([], []) $ map varsInExpr es
-  where join (as, bs) (cs, ds) = (as ++ cs, bs ++ ds)
+                              in if S.member v undecl
+                                    then (decl, undecl)
+                                    else (S.insert v decl, undecl)
+varsInExpr (FunctionCall _ es) = juxtAll $ map varsInExpr es
 
+juxtAll :: (Ord a) => [(S.Set a, S.Set a)] -> (S.Set a, S.Set a)
+juxtAll = foldl' juxt (S.empty, S.empty)
 
-without :: (Eq a) => [a] -> a -> [a]
-without xs y = [x | x <- xs, x /= y]
+juxt :: (Ord a) => (S.Set a, S.Set a) ->
+                   (S.Set a, S.Set a) ->
+                   (S.Set a, S.Set a)
+juxt (a1, b1) (a2, b2) = let a = S.union a1 a2
+                             b = S.union b1 b2
+                         in (a \\ b1, b \\ a1)
 
 notNull :: [a] -> Bool
 notNull = not . null
