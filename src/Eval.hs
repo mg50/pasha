@@ -2,34 +2,36 @@ module Eval where
 import Control.Monad
 import Control.Monad.State.Class
 import Control.Monad.Reader.Class
+import qualified Data.Map as M
 import Interpolate
 import Types
 
 eval :: Expression -> Pasha String
 eval (Variable varname) = do
   bindings <- get
-  case lookup varname bindings of
+  case M.lookup varname bindings of
     Just value -> return value
     Nothing    -> error $ "could not find variable " ++ varname
 
 eval (StringLit s) = do
   bindings <- get
-  let s' = interpolate bindings s
+  let s' = interpolate (M.toList bindings) s
   undefined
 
 eval (Assignment v expr) = do
   result <- eval expr
-  modify ((v, result):)
+  modify (M.insert v result)
   return result
 
 eval (FunctionCall fname args) = do
-  evalArgs <- mapM eval args
   fns <- ask
   let (Function _ paramNames body) = lookupFn fname fns
-  when (length paramNames /= length evalArgs) $
+  when (length paramNames /= length args) $
     error $ "incorrect number of parameters supplied for " ++ fname
 
-  withState (zip paramNames evalArgs) $ do
+  evalArgs <- mapM eval args
+  let newBindings = M.fromList $ zip paramNames evalArgs
+  withState newBindings $ do
     results <- mapM eval body
     case results of
       [] -> error $ "empty function body in function " ++ fname

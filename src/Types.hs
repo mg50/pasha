@@ -2,6 +2,7 @@
 module Types where
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
+import qualified Data.Map as M
 
 type Program = [Function]
 
@@ -14,8 +15,6 @@ data Function = Function { funcName :: String
                          , funcParams :: [String]
                          , body :: [Expression] } deriving (Eq, Show)
 
-type Bindings = [(String, String)]
-data Env = Env { fns :: Program
-               , bindings :: Bindings }
+type Bindings = M.Map String String
 
 type Pasha = StateT Bindings (ReaderT Program IO)
