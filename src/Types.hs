@@ -15,6 +15,16 @@ data Function = Function { funcName :: String
                          , funcParams :: [String]
                          , body :: [Expression] } deriving (Eq, Show)
 
+data AWSMode = Sandbox | Production deriving (Eq)
+
+data Config = Config { accessKey :: String
+                     , awsSecret :: String
+                     , reward :: Float
+                     , lifetime :: Int
+                     , program :: Program
+                     , duration :: Int
+                     , awsMode :: AWSMode }
+
 type Bindings = M.Map String String
 
-type Pasha = StateT Bindings (ReaderT Program IO)
+type Pasha = StateT Bindings (ReaderT Config IO)

@@ -24,7 +24,7 @@ eval (Assignment v expr) = do
   return result
 
 eval (FunctionCall fname args) = do
-  fns <- ask
+  fns <- asks program
   let (Function _ paramNames body) = lookupFn fname fns
   when (length paramNames /= length args) $
     error $ "incorrect number of parameters supplied for " ++ fname
