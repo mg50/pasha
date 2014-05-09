@@ -57,5 +57,6 @@ spec = do
 
     it "handles assignment statements" $ do
       p "def hello(a):\n  a = g('asdf')\n  b" `shouldBe` Function "hello" ["a"]
+
         [ Assignment "a" (FunctionCall "g" [StringLit "asdf"])
         , Variable "b" ]

@@ -9,7 +9,7 @@ parsePasha program = parse parseProgram "" program
 
 parseProgram :: Parser Program
 parseProgram = do blankLines
-                  defs <- parseFunctionDef `separatedBy` blankLines
+                  defs <- parseFunctionDef `separatedBy` newline
                   return defs
   where blankLines = many $ many blank >> (void newline <|> eof)
         blank = satisfy $ \c -> isSpace c && c /= '\n'
@@ -67,6 +67,6 @@ separatedBy parser sep = do spaces
 
 parseStringLit :: Parser Expression
 parseStringLit = do char '\''
-                    lit <- many $ noneOf "'"
+                    lit <- many $ letter <|> char ' '--oneOf "'"
                     char '\''
                     return $ StringLit lit

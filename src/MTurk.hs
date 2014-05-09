@@ -9,10 +9,16 @@ import qualified Data.ByteString.Base64 as BS64
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format
 import System.Locale (defaultTimeLocale)
+import Network.HTTP
 
 url :: AWSMode -> String
-url Sandbox = ""
+url Sandbox = "http://requestersandbox.mturk.com/?"
 url Production = "https://mechanicalturk.amazonaws.com/?"
+
+--askAndWait :: Config -> String -> IO String
+--askAndWait config question = do
+--  askQuestion config question
+--  undefined
 
 askQuestion :: Config -> String -> IO ()
 askQuestion config question = do
@@ -20,6 +26,7 @@ askQuestion config question = do
   let sig = getSignature config timestamp
       params = urlParams config timestamp question sig
       requestUrl = url (awsMode config) ++ urlEncodeVars params
+  putStrLn $ "about to ask: " ++ question
   makeRequest requestUrl
 
 urlParams config timestamp question signature =
@@ -38,10 +45,13 @@ urlParams config timestamp question signature =
   , ("LifetimeInSeconds", show (lifetime config))
   ]
 
-makeRequest = undefined
+makeRequest :: String -> IO ()
+makeRequest url = simpleHTTP (getRequest url) >>= print
+
+
 getTimestamp :: IO String
 getTimestamp = do time <- getCurrentTime
-                  return $ formatTime defaultTime "%Y"
+                  return $ formatTime defaultTimeLocale "%Y" time
 
 getSignature :: Config -> String -> String
 getSignature config timestamp = bsToString $ BS64.encode $ BS.pack sha

@@ -28,3 +28,6 @@ data Config = Config { accessKey :: String
 type Bindings = M.Map String String
 
 type Pasha = StateT Bindings (ReaderT Config IO)
+
+runPasha :: Config -> Pasha a -> IO a
+runPasha conf pasha = runReaderT (evalStateT pasha M.empty) conf

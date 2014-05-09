@@ -5,6 +5,8 @@ import Control.Monad.Reader.Class
 import qualified Data.Map as M
 import Interpolate
 import Types
+import MTurk (askQuestion)
+import Control.Monad.IO.Class
 
 eval :: Expression -> Pasha String
 eval (Variable varname) = do
@@ -16,7 +18,9 @@ eval (Variable varname) = do
 eval (StringLit s) = do
   bindings <- get
   let s' = interpolate bindings s
-  undefined
+  config <- ask
+  liftIO $ askQuestion config s'
+  return "hello"
 
 eval (Assignment v expr) = do
   result <- eval expr
